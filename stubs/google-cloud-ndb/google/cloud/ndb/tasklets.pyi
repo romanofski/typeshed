@@ -1,6 +1,9 @@
-from typing import Any
+from typing import Any, Callable, Generator, Generic, TypeVar
+from typing_extensions import ParamSpec
 
-class Future:
+_T = TypeVar("_T")
+
+class Future(Generic[_T]):
     info: Any
     def __init__(self, info: str = ...) -> None: ...
     def done(self): ...
@@ -22,18 +25,23 @@ class Future:
     @staticmethod
     def wait_all(futures): ...
 
-class _TaskletFuture(Future):
-    generator: Any
+class _TaskletFuture(Future[_T]):
+    generator: _T
     context: Any
     waiting_on: Any
-    def __init__(self, generator, context, info: str = ...) -> None: ...
+    def __init__(self, generator: Generator[_T, Any, Any], context, info: str = ...) -> None: ...
     def cancel(self) -> None: ...
 
-class _MultiFuture(Future):
+class _MultiFuture(Future[_T]):
     def __init__(self, dependencies) -> None: ...
     def cancel(self) -> None: ...
 
-def tasklet(wrapped): ...
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+# Generator[Generator[Iterable[_entities.ProjectAssetReference], Iterable[_entities.ProjectAssetReference],
+#                         Iterable[_entities.ProjectAssetReference]],
+#               Iterable[_entities.ProjectAssetReference], Iterable[str]]
+def tasklet(wrapped: Callable[_P, _R]) -> Callable[_P, _TaskletFuture[_R] | Future[_R]]: ...
 def wait_any(futures): ...
 def wait_all(futures) -> None: ...
 
